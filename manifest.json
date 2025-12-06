@@ -1,9 +1,9 @@
 {
-  "name": "KPI Tracker",
-  "short_name": "KPIApp",
+  "name": "Retail KPI Pro Dashboard",
+  "short_name": "KPI Dashboard",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ff6600",
+  "background_color": "#020617",
+  "theme_color": "#f97316",
   "icons": []
 }
