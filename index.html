@@ -1,27 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>KPI Tracker App</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <title>Retail KPI Pro Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>KPI Daily Entry</h1>
-  <form id="dailyForm">
-    <label>Date:<input type="date" id="date"></label>
-    <label>GAs:<input type="number" id="gas"></label>
-    <label>OC Existing:<input type="number" id="oc_exist"></label>
-    <label>OC New:<input type="number" id="oc_new"></label>
-    <label>Points:<input type="number" id="points"></label>
-    <label>Postpaid:<input type="number" id="postpaid"></label>
-    <label>ADSL:<input type="number" id="adsl"></label>
-    <label>Wireless:<input type="number" id="wireless"></label>
-    <label>Devices:<input type="number" id="devices"></label>
-    <button type="submit">Save Day</button>
-  </form>
-  <h2>Dashboard</h2>
-  <div id="dashboard"></div>
-<script src="app.js"></script>
+  <header class="app-header">
+    <h1>Retail KPI Pro Dashboard</h1>
+    <p>Direct Channel • Sales Agent</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-button active" data-tab="daily">Daily Entry</button>
+    <button class="tab-button" data-tab="dashboard">Dashboard</button>
+    <button class="tab-button" data-tab="settings">Targets & Rules</button>
+  </nav>
+
+  <!-- ========== TAB: DAILY ENTRY ========== -->
+  <main>
+    <section id="tab-daily" class="tab active">
+      <h2>Daily KPI Entry</h2>
+      <form id="daily-form" class="card form-grid">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="date" required />
+        </div>
+
+        <div class="form-group">
+          <label>GAs (Lines)</label>
+          <input type="number" id="gas" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>OC Existing Wallets</label>
+          <input type="number" id="ocExisting" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>OC New Wallets</label>
+          <input type="number" id="ocNew" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Points (Base from system)</label>
+          <input type="number" id="pointsBase" min="0" step="0.5" />
+        </div>
+
+        <div class="form-group">
+          <label>Postpaid Lines</label>
+          <input type="number" id="postpaid" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Home ADSL Subs</label>
+          <input type="number" id="adsl" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Home Wireless Subs</label>
+          <input type="number" id="wireless" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Devices</label>
+          <input type="number" id="devices" min="0" step="1" />
+        </div>
+
+        <h3 class="full-width">Rules / Bonuses (per day)</h3>
+
+        <div class="form-group">
+          <label>FREEmax 70+ lines (each +3 pts)</label>
+          <input type="number" id="freeMax70Plus" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>New Corporate Accounts (each = 12 pts & 1 GA)</label>
+          <input type="number" id="corpAccounts" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>MNP lines after target (each +10 pts)</label>
+          <input type="number" id="extraMnpLines" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Extra PREMIER lines over achievement (each +30 pts)</label>
+          <input type="number" id="extraPremierLines" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>SIM change 3G → 4G (each +1.5 pts)</label>
+          <input type="number" id="sim3to4" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>SIM change 3G/4G → eSIM (each +3 pts)</label>
+          <input type="number" id="simToEsim" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Unqualified MNP / wrong docs (-1 GA each)</label>
+          <input type="number" id="unqualifiedMnp" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>MNP not recharged (not counted in GAs)</label>
+          <input type="number" id="mnpNotRecharged" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Other extra points (manual)</label>
+          <input type="number" id="otherExtraPoints" min="0" step="0.5" />
+        </div>
+
+        <button type="submit" class="primary full-width">Save / Update Day</button>
+        <button type="button" id="clear-day" class="secondary full-width">Clear Current Date</button>
+      </form>
+
+      <section class="card">
+        <h3>Saved Days</h3>
+        <ul id="days-list" class="days-list"></ul>
+        <button type="button" id="clear-all" class="danger">Reset All Data</button>
+      </section>
+    </section>
+
+    <!-- ========== TAB: DASHBOARD ========== -->
+    <section id="tab-dashboard" class="tab">
+      <h2>Monthly Dashboard</h2>
+      <section class="grid-3" id="kpi-cards"></section>
+
+      <section class="card">
+        <h3>Weighted Score</h3>
+        <div id="score-summary"></div>
+      </section>
+
+      <section class="card">
+        <h3>Rules Impact Summary</h3>
+        <div id="rules-summary"></div>
+      </section>
+    </section>
+
+    <!-- ========== TAB: SETTINGS ========== -->
+    <section id="tab-settings" class="tab">
+      <h2>Targets & Quality</h2>
+      <form id="settings-form" class="card form-grid">
+        <div class="form-group">
+          <label>Month Days</label>
+          <input type="number" id="monthDays" min="1" max="31" />
+        </div>
+
+        <div class="form-group">
+          <label>Target GAs</label>
+          <input type="number" id="targetGas" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Target OC Existing Wallets</label>
+          <input type="number" id="targetOcExisting" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Target OC New Wallets</label>
+          <input type="number" id="targetOcNew" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Target Points</label>
+          <input type="number" id="targetPoints" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Target Postpaid Lines</label>
+          <input type="number" id="targetPostpaid" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Target Home Internet (ADSL + Wireless)</label>
+          <input type="number" id="targetHomeInternet" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Target Devices</label>
+          <input type="number" id="targetDevices" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Quality Score % (overall)</label>
+          <input type="number" id="qualityScore" min="0" max="100" step="0.1" />
+        </div>
+
+        <button type="submit" class="primary full-width">Save Settings</button>
+      </form>
+
+      <section class="card">
+        <h3>KPI Weights (Agent)</h3>
+        <ul>
+          <li>GAs = 40%</li>
+          <li>OC Existing = 10%</li>
+          <li>Points = 15%</li>
+          <li>Postpaid = 10%</li>
+          <li>Home Internet = 12%</li>
+          <li>Devices = 5%</li>
+          <li>Quality (Visits + CSAT + Complains + Knowledge) = 8%</li>
+        </ul>
+        <p>Clawback rules:</p>
+        <ul>
+          <li>Postpaid KPI not achieved → -5%</li>
+          <li>ADSL KPI not achieved → -5%</li>
+          <li>Quality &lt; 92% → -10%</li>
+          <li>Final score &lt; 80 → No payment</li>
+        </ul>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>
