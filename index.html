@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>KPI Tracker App</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <h1>KPI Daily Entry</h1>
+  <form id="dailyForm">
+    <label>Date:<input type="date" id="date"></label>
+    <label>GAs:<input type="number" id="gas"></label>
+    <label>OC Existing:<input type="number" id="oc_exist"></label>
+    <label>OC New:<input type="number" id="oc_new"></label>
+    <label>Points:<input type="number" id="points"></label>
+    <label>Postpaid:<input type="number" id="postpaid"></label>
+    <label>ADSL:<input type="number" id="adsl"></label>
+    <label>Wireless:<input type="number" id="wireless"></label>
+    <label>Devices:<input type="number" id="devices"></label>
+    <button type="submit">Save Day</button>
+  </form>
+  <h2>Dashboard</h2>
+  <div id="dashboard"></div>
+<script src="app.js"></script>
+</body>
+</html>
