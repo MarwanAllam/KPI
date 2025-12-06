@@ -2,221 +2,1005 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Retail KPI Pro Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --accent: #f97316;
+      --accent-soft: rgba(249,115,22,0.1);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+      --warning: #eab308;
+      --success: #22c55e;
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .app-title {
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title span.logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: conic-gradient(
+        from 200deg,
+        #f97316,
+        #fb923c,
+        #facc15,
+        #f97316
+      );
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #020617;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #111827;
+      font-weight: 600;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.9);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .subtext {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    /* FORM */
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    input,
+    select {
+      padding: 7px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 1px solid var(--accent);
+      border-color: var(--accent);
+    }
+
+    button.primary {
+      grid-column: 1 / -1;
+      padding: 10px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #f97316, #facc15);
+      color: #111827;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    button.secondary {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: #020617;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* DASHBOARD */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .kpi-main {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .kpi-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-top: 2px;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge.success {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--success);
+    }
+
+    .badge.warning {
+      background: rgba(234, 179, 8, 0.1);
+      color: var(--warning);
+    }
+
+    .badge.danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .badge.info {
+      background: rgba(148, 163, 184, 0.1);
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      margin-right: 5px;
+    }
+
+    .dot-success {
+      background: var(--success);
+    }
+
+    .dot-warning {
+      background: var(--warning);
+    }
+
+    .dot-danger {
+      background: var(--danger);
+    }
+
+    .dot-info {
+      background: var(--muted);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .summary-row strong {
+      font-size: 13px;
+    }
+
+    .chip {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #020617;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* TABLE OF DAYS */
+
+    .table-wrapper {
+      margin-top: 12px;
+      max-height: 260px;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: #020617;
+    }
+
+    th,
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #020617;
+      text-align: right;
+      font-weight: 600;
+    }
+
+    td:first-child,
+    th:first-child {
+      text-align: left;
+    }
+
+    tr:nth-child(even) td {
+      background: #030712;
+    }
+
+    /* SETTINGS */
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .app-title {
+        font-size: 18px;
+      }
+
+      .card {
+        padding: 12px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>Retail KPI Pro Dashboard</h1>
-    <p>Direct Channel • Sales Agent</p>
-  </header>
+  <div class="app">
+    <header>
+      <div class="app-title">
+        <span class="logo">K</span>
+        Retail KPI Pro
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" data-screen="entry">Daily</button>
+        <button class="tab-btn" data-screen="dashboard">Dashboard</button>
+        <button class="tab-btn" data-screen="settings">Targets</button>
+      </div>
+    </header>
 
-  <nav class="tabs">
-    <button class="tab-button active" data-tab="daily">Daily Entry</button>
-    <button class="tab-button" data-tab="dashboard">Dashboard</button>
-    <button class="tab-button" data-tab="settings">Targets & Rules</button>
-  </nav>
+    <main>
+      <!-- DAILY ENTRY -->
+      <section id="screen-entry" class="screen active">
+        <div class="card">
+          <div class="card-title">
+            Daily Input
+            <span class="pill">Base KPIs</span>
+          </div>
+          <p class="subtext">
+            دخّل بيانات اليوم (الخطوط / المحافظ / البوينتس...) + اختيارات البونس من الرولز.
+          </p>
+          <form id="daily-form">
+            <label>
+              Date
+              <input type="date" name="date" required />
+            </label>
+            <label>
+              GAs (Lines)
+              <input type="number" name="gas" min="0" step="1" />
+            </label>
+            <label>
+              OC Existing Wallets
+              <input type="number" name="ocExisting" min="0" step="1" />
+            </label>
+            <label>
+              OC New Wallets
+              <input type="number" name="ocNew" min="0" step="1" />
+            </label>
+            <label>
+              Points (basic)
+              <input type="number" name="points" min="0" step="0.1" />
+            </label>
+            <label>
+              Postpaid Lines
+              <input type="number" name="postpaid" min="0" step="1" />
+            </label>
+            <label>
+              Home ADSL Subs
+              <input type="number" name="adsl" min="0" step="1" />
+            </label>
+            <label>
+              Home Wireless Subs
+              <input type="number" name="wireless" min="0" step="1" />
+            </label>
+            <label>
+              Devices
+              <input type="number" name="devices" min="0" step="1" />
+            </label>
 
-  <!-- ========== TAB: DAILY ENTRY ========== -->
-  <main>
-    <section id="tab-daily" class="tab active">
-      <h2>Daily KPI Entry</h2>
-      <form id="daily-form" class="card form-grid">
-        <div class="form-group">
-          <label>Date</label>
-          <input type="date" id="date" required />
+            <!-- BONUS / RULES -->
+            <div style="grid-column: 1 / -1; margin-top: 6px; font-size: 12px; font-weight: 600;">
+              Rules & Bonus (per day)
+            </div>
+
+            <label>
+              PREMIER + ADSL / Wireless bundles  
+              <span class="subtext">Points from bundles (before double)</span>
+              <input type="number" name="bundlePoints" min="0" step="0.1" />
+            </label>
+
+            <label>
+              Extra ADSL bonus points
+              <span class="subtext">for extra ADSL subs over target</span>
+              <input type="number" name="extraAdslBonus" min="0" step="0.1" />
+            </label>
+
+            <label>
+              Extra MNP lines after target
+              <span class="subtext">+10 points لكل خط</span>
+              <input type="number" name="extraMnpLines" min="0" step="1" />
+            </label>
+
+            <label>
+              Extra PREMIER lines over achievement
+              <span class="subtext">+30 points لكل خط</span>
+              <input type="number" name="extraPremierLines" min="0" step="1" />
+            </label>
+
+            <label>
+              New Corporate Accounts
+              <span class="subtext">12 points لكل حساب جديد</span>
+              <input type="number" name="corpAccounts" min="0" step="1" />
+            </label>
+
+            <label>
+              Change SIM 3G → 4G
+              <span class="subtext">1.5 points لكل خط</span>
+              <input type="number" name="sim3to4" min="0" step="1" />
+            </label>
+
+            <label>
+              Change SIM → eSIM
+              <span class="subtext">3 points لكل خط</span>
+              <input type="number" name="simToEsim" min="0" step="1" />
+            </label>
+
+            <label>
+              Manual Extra Points
+              <span class="subtext">أي بونص إضافي تحبه تحسبه على البوينتس</span>
+              <input type="number" name="manualBonus" min="0" step="0.1" />
+            </label>
+
+            <button type="submit" class="primary">Save / Update Day</button>
+          </form>
+
+          <div class="summary-row">
+            <span class="hint">
+              لو كتبت نفس التاريخ مرة تانية، البرنامج هيعمل
+              <strong>Update</strong> لليوم ده.
+            </span>
+            <button id="clear-all" class="secondary">Clear all data</button>
+          </div>
+
+          <div class="table-wrapper">
+            <table id="daily-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>GAs</th>
+                  <th>OC Ex.</th>
+                  <th>OC New</th>
+                  <th>Points</th>
+                  <th>Postpaid</th>
+                  <th>ADSL</th>
+                  <th>Wireless</th>
+                  <th>Devices</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label>GAs (Lines)</label>
-          <input type="number" id="gas" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>OC Existing Wallets</label>
-          <input type="number" id="ocExisting" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>OC New Wallets</label>
-          <input type="number" id="ocNew" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Points (Base from system)</label>
-          <input type="number" id="pointsBase" min="0" step="0.5" />
-        </div>
-
-        <div class="form-group">
-          <label>Postpaid Lines</label>
-          <input type="number" id="postpaid" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Home ADSL Subs</label>
-          <input type="number" id="adsl" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Home Wireless Subs</label>
-          <input type="number" id="wireless" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Devices</label>
-          <input type="number" id="devices" min="0" step="1" />
-        </div>
-
-        <h3 class="full-width">Rules / Bonuses (per day)</h3>
-
-        <div class="form-group">
-          <label>FREEmax 70+ lines (each +3 pts)</label>
-          <input type="number" id="freeMax70Plus" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>New Corporate Accounts (each = 12 pts & 1 GA)</label>
-          <input type="number" id="corpAccounts" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>MNP lines after target (each +10 pts)</label>
-          <input type="number" id="extraMnpLines" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Extra PREMIER lines over achievement (each +30 pts)</label>
-          <input type="number" id="extraPremierLines" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>SIM change 3G → 4G (each +1.5 pts)</label>
-          <input type="number" id="sim3to4" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>SIM change 3G/4G → eSIM (each +3 pts)</label>
-          <input type="number" id="simToEsim" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Unqualified MNP / wrong docs (-1 GA each)</label>
-          <input type="number" id="unqualifiedMnp" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>MNP not recharged (not counted in GAs)</label>
-          <input type="number" id="mnpNotRecharged" min="0" step="1" />
-        </div>
-
-        <div class="form-group">
-          <label>Other extra points (manual)</label>
-          <input type="number" id="otherExtraPoints" min="0" step="0.5" />
-        </div>
-
-        <button type="submit" class="primary full-width">Save / Update Day</button>
-        <button type="button" id="clear-day" class="secondary full-width">Clear Current Date</button>
-      </form>
-
-      <section class="card">
-        <h3>Saved Days</h3>
-        <ul id="days-list" class="days-list"></ul>
-        <button type="button" id="clear-all" class="danger">Reset All Data</button>
       </section>
-    </section>
 
-    <!-- ========== TAB: DASHBOARD ========== -->
-    <section id="tab-dashboard" class="tab">
-      <h2>Monthly Dashboard</h2>
-      <section class="grid-3" id="kpi-cards"></section>
+      <!-- DASHBOARD -->
+      <section id="screen-dashboard" class="screen">
+        <div class="card">
+          <div class="card-title">
+            Overview
+            <span class="pill" id="period-label">This Month</span>
+          </div>
+          <p class="subtext">
+            ملخص الأهداف مقابل الإنجاز + البونص من الرولز + السكور النهائي.
+          </p>
+          <div class="grid" id="kpi-cards"></div>
 
-      <section class="card">
-        <h3>Weighted Score</h3>
-        <div id="score-summary"></div>
+          <div class="summary-row" style="margin-top: 14px;">
+            <div>
+              <strong>Total Points (Base + Bonus)</strong>
+              <div id="points-breakdown" class="hint"></div>
+            </div>
+            <div>
+              <span class="chip" id="overall-score-chip">Score: 0</span>
+            </div>
+          </div>
+
+          <div class="summary-row">
+            <div class="hint">
+              <span class="status-dot dot-success"></span>≥ 100% Achieved &nbsp;
+              <span class="status-dot dot-warning"></span>80–99% On Track &nbsp;
+              <span class="status-dot dot-danger"></span>&lt; 80% Below
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="card">
-        <h3>Rules Impact Summary</h3>
-        <div id="rules-summary"></div>
+      <!-- SETTINGS / TARGETS -->
+      <section id="screen-settings" class="screen">
+        <div class="card">
+          <div class="card-title">
+            Targets & Weights
+            <span class="pill">Config</span>
+          </div>
+          <p class="subtext">
+            حط التارجت الشهري لكل KPI + عدد أيام الشهر، البرنامج هيقسم الباقي
+            على الأيام المتبقية.
+          </p>
+
+          <form id="settings-form" class="settings-grid">
+            <label>
+              Month days
+              <input type="number" name="monthDays" min="1" max="31" />
+            </label>
+            <label>
+              Quality score (%)
+              <span class="subtext">من السيستم (CSAT + NTRA ...)</span>
+              <input type="number" name="qualityScore" min="0" max="100" />
+            </label>
+
+            <label>
+              Target GAs (Lines)
+              <input type="number" name="target_gas" min="0" />
+            </label>
+            <label>
+              Target OC Existing Wallets
+              <input type="number" name="target_ocExisting" min="0" />
+            </label>
+            <label>
+              Target OC New Wallets
+              <input type="number" name="target_ocNew" min="0" />
+            </label>
+            <label>
+              Target Points (Total)
+              <input type="number" name="target_points" min="0" />
+            </label>
+            <label>
+              Target Postpaid Lines
+              <input type="number" name="target_postpaid" min="0" />
+            </label>
+            <label>
+              Target Home ADSL Subs
+              <input type="number" name="target_adsl" min="0" />
+            </label>
+            <label>
+              Target Home Wireless Subs
+              <input type="number" name="target_wireless" min="0" />
+            </label>
+            <label>
+              Target Devices
+              <input type="number" name="target_devices" min="0" />
+            </label>
+
+            <button type="submit" class="primary">Save Targets</button>
+          </form>
+
+          <p class="hint">
+            الأوزان (Weights) المستخدمة للسكور: GAs 40 – Points 15 – OC Existing
+            10 – Postpaid 10 – Home Internet 12 – Devices 5 – Quality 8.
+            (Productivity 0 للـ Agent)
+          </p>
+        </div>
       </section>
-    </section>
+    </main>
+  </div>
 
-    <!-- ========== TAB: SETTINGS ========== -->
-    <section id="tab-settings" class="tab">
-      <h2>Targets & Quality</h2>
-      <form id="settings-form" class="card form-grid">
-        <div class="form-group">
-          <label>Month Days</label>
-          <input type="number" id="monthDays" min="1" max="31" />
-        </div>
+  <script>
+    const STORAGE_KEY = "retail_kpi_pro_v1";
 
-        <div class="form-group">
-          <label>Target GAs</label>
-          <input type="number" id="targetGas" min="0" step="1" />
-        </div>
+    const KPI_CONFIG = [
+      { key: "gas", label: "GAs (Lines)", weight: 40 },
+      { key: "ocExisting", label: "OC Existing Wallets", weight: 10 },
+      { key: "ocNew", label: "OC New Wallets", weight: 0 },
+      { key: "pointsTotal", label: "Points (Base + Bonus)", weight: 15 },
+      { key: "postpaid", label: "Postpaid Lines", weight: 10 },
+      { key: "homeInternet", label: "Home Internet (ADSL + Wireless)", weight: 12 },
+      { key: "devices", label: "Devices", weight: 5 },
+      { key: "qualityScore", label: "Quality (%)", weight: 8, isPercent: true },
+    ];
 
-        <div class="form-group">
-          <label>Target OC Existing Wallets</label>
-          <input type="number" id="targetOcExisting" min="0" step="1" />
-        </div>
+    // ---------- STATE ----------
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return {
+            monthDays: 30,
+            qualityScore: 100,
+            targets: {
+              gas: 0,
+              ocExisting: 0,
+              ocNew: 0,
+              pointsTotal: 0,
+              postpaid: 0,
+              adsl: 0,
+              wireless: 0,
+              devices: 0,
+            },
+            entries: [],
+          };
+        }
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error(e);
+        return {
+          monthDays: 30,
+          qualityScore: 100,
+          targets: {
+            gas: 0,
+            ocExisting: 0,
+            ocNew: 0,
+            pointsTotal: 0,
+            postpaid: 0,
+            adsl: 0,
+            wireless: 0,
+            devices: 0,
+          },
+          entries: [],
+        };
+      }
+    }
 
-        <div class="form-group">
-          <label>Target OC New Wallets</label>
-          <input type="number" id="targetOcNew" min="0" step="1" />
-        </div>
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
 
-        <div class="form-group">
-          <label>Target Points</label>
-          <input type="number" id="targetPoints" min="0" step="1" />
-        </div>
+    let state = loadState();
 
-        <div class="form-group">
-          <label>Target Postpaid Lines</label>
-          <input type="number" id="targetPostpaid" min="0" step="1" />
-        </div>
+    // ---------- TABS ----------
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
 
-        <div class="form-group">
-          <label>Target Home Internet (ADSL + Wireless)</label>
-          <input type="number" id="targetHomeInternet" min="0" step="1" />
-        </div>
+        const screen = btn.dataset.screen;
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        document
+          .getElementById("screen-" + screen)
+          .classList.add("active");
+      });
+    });
 
-        <div class="form-group">
-          <label>Target Devices</label>
-          <input type="number" id="targetDevices" min="0" step="1" />
-        </div>
+    // ---------- DAILY FORM ----------
+    const dailyForm = document.getElementById("daily-form");
+    const dailyTableBody = document.querySelector("#daily-table tbody");
+    const clearAllBtn = document.getElementById("clear-all");
 
-        <div class="form-group">
-          <label>Quality Score % (overall)</label>
-          <input type="number" id="qualityScore" min="0" max="100" step="0.1" />
-        </div>
+    dailyForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = new FormData(dailyForm);
+      const entry = {
+        date: formData.get("date"),
+        gas: +formData.get("gas") || 0,
+        ocExisting: +formData.get("ocExisting") || 0,
+        ocNew: +formData.get("ocNew") || 0,
+        points: +formData.get("points") || 0,
+        postpaid: +formData.get("postpaid") || 0,
+        adsl: +formData.get("adsl") || 0,
+        wireless: +formData.get("wireless") || 0,
+        devices: +formData.get("devices") || 0,
+        // bonuses
+        bundlePoints: +formData.get("bundlePoints") || 0,
+        extraAdslBonus: +formData.get("extraAdslBonus") || 0,
+        extraMnpLines: +formData.get("extraMnpLines") || 0,
+        extraPremierLines: +formData.get("extraPremierLines") || 0,
+        corpAccounts: +formData.get("corpAccounts") || 0,
+        sim3to4: +formData.get("sim3to4") || 0,
+        simToEsim: +formData.get("simToEsim") || 0,
+        manualBonus: +formData.get("manualBonus") || 0,
+      };
 
-        <button type="submit" class="primary full-width">Save Settings</button>
-      </form>
+      // لو اليوم موجود قبل كده نعمل Update
+      const existingIndex = state.entries.findIndex(
+        (d) => d.date === entry.date
+      );
+      if (existingIndex >= 0) {
+        state.entries[existingIndex] = entry;
+      } else {
+        state.entries.push(entry);
+      }
 
-      <section class="card">
-        <h3>KPI Weights (Agent)</h3>
-        <ul>
-          <li>GAs = 40%</li>
-          <li>OC Existing = 10%</li>
-          <li>Points = 15%</li>
-          <li>Postpaid = 10%</li>
-          <li>Home Internet = 12%</li>
-          <li>Devices = 5%</li>
-          <li>Quality (Visits + CSAT + Complains + Knowledge) = 8%</li>
-        </ul>
-        <p>Clawback rules:</p>
-        <ul>
-          <li>Postpaid KPI not achieved → -5%</li>
-          <li>ADSL KPI not achieved → -5%</li>
-          <li>Quality &lt; 92% → -10%</li>
-          <li>Final score &lt; 80 → No payment</li>
-        </ul>
-      </section>
-    </section>
-  </main>
+      // sort by date
+      state.entries.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      saveState();
+      renderDailyTable();
+      renderDashboard();
+      dailyForm.reset();
+    });
 
-  <script src="app.js"></script>
+    clearAllBtn.addEventListener("click", () => {
+      if (!confirm("مسح كل البيانات؟")) return;
+      state.entries = [];
+      saveState();
+      renderDailyTable();
+      renderDashboard();
+    });
+
+    function renderDailyTable() {
+      dailyTableBody.innerHTML = "";
+      state.entries.forEach((d) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d.date || ""}</td>
+          <td>${d.gas}</td>
+          <td>${d.ocExisting}</td>
+          <td>${d.ocNew}</td>
+          <td>${d.points}</td>
+          <td>${d.postpaid}</td>
+          <td>${d.adsl}</td>
+          <td>${d.wireless}</td>
+          <td>${d.devices}</td>
+        `;
+        dailyTableBody.appendChild(tr);
+      });
+    }
+
+    // ---------- SETTINGS / TARGETS ----------
+    const settingsForm = document.getElementById("settings-form");
+
+    function fillSettingsForm() {
+      settingsForm.monthDays.value = state.monthDays;
+      settingsForm.qualityScore.value = state.qualityScore;
+
+      settingsForm.target_gas.value = state.targets.gas || "";
+      settingsForm.target_ocExisting.value = state.targets.ocExisting || "";
+      settingsForm.target_ocNew.value = state.targets.ocNew || "";
+      settingsForm.target_points.value = state.targets.pointsTotal || "";
+      settingsForm.target_postpaid.value = state.targets.postpaid || "";
+      settingsForm.target_adsl.value = state.targets.adsl || "";
+      settingsForm.target_wireless.value = state.targets.wireless || "";
+      settingsForm.target_devices.value = state.targets.devices || "";
+    }
+
+    settingsForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(settingsForm);
+      state.monthDays = +fd.get("monthDays") || 30;
+      state.qualityScore = +fd.get("qualityScore") || 0;
+
+      state.targets.gas = +fd.get("target_gas") || 0;
+      state.targets.ocExisting = +fd.get("target_ocExisting") || 0;
+      state.targets.ocNew = +fd.get("target_ocNew") || 0;
+      state.targets.pointsTotal = +fd.get("target_points") || 0;
+      state.targets.postpaid = +fd.get("target_postpaid") || 0;
+      state.targets.adsl = +fd.get("target_adsl") || 0;
+      state.targets.wireless = +fd.get("target_wireless") || 0;
+      state.targets.devices = +fd.get("target_devices") || 0;
+
+      saveState();
+      renderDashboard();
+      alert("Targets updated ✅");
+    });
+
+    // ---------- CALCULATIONS ----------
+    function computeTotals() {
+      const totals = {
+        gas: 0,
+        ocExisting: 0,
+        ocNew: 0,
+        pointsBase: 0,
+        pointsBonus: 0,
+        postpaid: 0,
+        adsl: 0,
+        wireless: 0,
+        devices: 0,
+      };
+
+      state.entries.forEach((d) => {
+        totals.gas += d.gas;
+        totals.ocExisting += d.ocExisting;
+        totals.ocNew += d.ocNew;
+        totals.pointsBase += d.points;
+        totals.postpaid += d.postpaid;
+        totals.adsl += d.adsl;
+        totals.wireless += d.wireless;
+        totals.devices += d.devices;
+
+        // BONUS from rules:
+        // 1) PREMIER + ADSL/Wireless bundles (double points)
+        totals.pointsBonus += d.bundlePoints; // extra = original again
+
+        // 2) Extra ADSL bonus (manual)
+        totals.pointsBonus += d.extraAdslBonus;
+
+        // 3) Extra MNP lines after target: +10 points per line
+        totals.pointsBonus += d.extraMnpLines * 10;
+
+        // 4) Extra PREMIER lines over achievement: +30 points per line
+        totals.pointsBonus += d.extraPremierLines * 30;
+
+        // 5) New corporate accounts: 12 points each
+        totals.pointsBonus += d.corpAccounts * 12;
+
+        // 6) Change SIM 3G->4G: 1.5 points each
+        totals.pointsBonus += d.sim3to4 * 1.5;
+
+        // 7) Change SIM to eSIM: 3 points each
+        totals.pointsBonus += d.simToEsim * 3;
+
+        // 8) Manual extra points
+        totals.pointsBonus += d.manualBonus;
+      });
+
+      totals.pointsTotal = totals.pointsBase + totals.pointsBonus;
+      totals.homeInternet = totals.adsl + totals.wireless;
+
+      return totals;
+    }
+
+    function percent(achieved, target) {
+      if (!target || target <= 0) return 0;
+      return achieved / target;
+    }
+
+    function statusClass(p) {
+      if (p >= 1.0) return { badge: "success", dot: "dot-success", label: "Achieved" };
+      if (p >= 0.8)
+        return { badge: "warning", dot: "dot-warning", label: "On Track" };
+      if (p === 0) return { badge: "info", dot: "dot-info", label: "No Data" };
+      return { badge: "danger", dot: "dot-danger", label: "Below" };
+    }
+
+    // ---------- DASHBOARD RENDER ----------
+    const kpiCardsContainer = document.getElementById("kpi-cards");
+    const pointsBreakdownEl = document.getElementById("points-breakdown");
+    const overallScoreChip = document.getElementById("overall-score-chip");
+    const periodLabel = document.getElementById("period-label");
+
+    function renderDashboard() {
+      const totals = computeTotals();
+      const usedDays = state.entries.filter((e) => e.date).length;
+      const remainingDays = Math.max(state.monthDays - usedDays, 0);
+      periodLabel.textContent = `Days used: ${usedDays}/${state.monthDays}`;
+
+      kpiCardsContainer.innerHTML = "";
+
+      let totalWeighted = 0;
+      let totalWeights = 0;
+
+      KPI_CONFIG.forEach((cfg) => {
+        let achieved = 0;
+        let target = 0;
+
+        if (cfg.key === "gas") {
+          achieved = totals.gas;
+          target = state.targets.gas;
+        } else if (cfg.key === "ocExisting") {
+          achieved = totals.ocExisting;
+          target = state.targets.ocExisting;
+        } else if (cfg.key === "ocNew") {
+          achieved = totals.ocNew;
+          target = state.targets.ocNew;
+        } else if (cfg.key === "pointsTotal") {
+          achieved = totals.pointsTotal;
+          target = state.targets.pointsTotal;
+        } else if (cfg.key === "postpaid") {
+          achieved = totals.postpaid;
+          target = state.targets.postpaid;
+        } else if (cfg.key === "homeInternet") {
+          achieved = totals.homeInternet;
+          target = (state.targets.adsl || 0) + (state.targets.wireless || 0);
+        } else if (cfg.key === "devices") {
+          achieved = totals.devices;
+          target = state.targets.devices;
+        } else if (cfg.key === "qualityScore") {
+          achieved = state.qualityScore;
+          target = 100;
+        }
+
+        const p = cfg.isPercent ? achieved / 100 : percent(achieved, target);
+        const pDisplay = (p * 100).toFixed(1) + "%";
+        const remaining = cfg.isPercent ? 0 : (target || 0) - (achieved || 0);
+        const perDay =
+          cfg.isPercent || remainingDays === 0
+            ? 0
+            : remaining / remainingDays;
+
+        const st = statusClass(p);
+
+        if (cfg.weight > 0) {
+          totalWeighted += p * cfg.weight;
+          totalWeights += cfg.weight;
+        }
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-title">
+            <span>${cfg.label}</span>
+            <span class="badge ${st.badge}">
+              <span class="status-dot ${st.dot}"></span>${st.label}
+            </span>
+          </div>
+          <div class="kpi-main">${pDisplay}</div>
+          <div class="kpi-row">
+            <span>Target</span>
+            <span>${cfg.isPercent ? (target || 0) + "%" : target || 0}</span>
+          </div>
+          <div class="kpi-row">
+            <span>Achieved</span>
+            <span>${cfg.isPercent ? achieved + "%" : achieved}</span>
+          </div>
+          <div class="kpi-row">
+            <span>Remaining</span>
+            <span>${cfg.isPercent ? "-" : remaining.toFixed(1)}</span>
+          </div>
+          <div class="kpi-row">
+            <span>Needed / day</span>
+            <span>${
+              cfg.isPercent
+                ? "-"
+                : remainingDays > 0
+                ? perDay.toFixed(2)
+                : "0"
+            }</span>
+          </div>
+          <div class="kpi-row">
+            <span>Weight</span>
+            <span>${cfg.weight}</span>
+          </div>
+        `;
+        kpiCardsContainer.appendChild(card);
+      });
+
+      // POINTS BREAKDOWN
+      pointsBreakdownEl.textContent = `Base: ${totals.pointsBase.toFixed(
+        1
+      )} | Bonus from rules: ${totals.pointsBonus.toFixed(
+        1
+      )} | Total: ${totals.pointsTotal.toFixed(1)}`;
+
+      // OVERALL SCORE
+      let score = totalWeights > 0 ? totalWeighted : 0;
+      const scoreText = score.toFixed(1);
+      overallScoreChip.textContent = `Score: ${scoreText}`;
+
+      overallScoreChip.className = "chip";
+      const sc = statusClass(score / 100);
+      if (sc.badge === "success") {
+        overallScoreChip.style.border = "1px solid rgba(34,197,94,0.5)";
+      } else if (sc.badge === "warning") {
+        overallScoreChip.style.border = "1px solid rgba(234,179,8,0.5)";
+      } else if (sc.badge === "danger") {
+        overallScoreChip.style.border = "1px solid rgba(239,68,68,0.5)";
+      } else {
+        overallScoreChip.style.border = "1px solid rgba(148,163,184,0.4)";
+      }
+    }
+
+    // ---------- INIT ----------
+    fillSettingsForm();
+    renderDailyTable();
+    renderDashboard();
+  </script>
 </body>
 </html>
