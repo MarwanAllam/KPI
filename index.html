@@ -11,7 +11,7 @@
     .app-header h1{margin:0;font-size:20px;color:#f97316;font-weight:700}
     .subtitle{margin:4px 0 0;font-size:12px;color:#9ca3af}
     .tabs{display:flex;background:#020617;border-bottom:1px solid #1f2937}
-    .tab-btn{flex:1;padding:10px 4px;background:transparent;border:0;border-bottom:2px solid transparent;color:#9ca3af;font-size:13px;font-weight:500}
+    .tab-btn{flex:1;padding:10px 4px;background:transparent;border:0;border-bottom:2px solid transparent;color:#9ca3af;font-size:13px;font-weight:500;cursor:pointer}
     .tab-btn.active{color:#f97316;border-color:#f97316;background:#111827}
     .view{display:none;padding:12px 12px 70px}
     .view.active{display:block}
@@ -26,7 +26,7 @@
     label{font-size:12px;color:#9ca3af;display:flex;flex-direction:column;gap:4px}
     input,select{padding:8px 9px;border-radius:10px;border:1px solid #374151;background:#020617;color:#e5e7eb;font-size:13px}
     input:focus,select:focus{outline:none;border-color:#f97316;box-shadow:0 0 0 1px rgba(249,115,22,0.4)}
-    .primary-btn, .ghost-btn{border-radius:999px;border:0;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+    .primary-btn,.ghost-btn{border-radius:999px;border:0;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
     .primary-btn{background:linear-gradient(135deg,#fb923c,#f97316);color:#111827;box-shadow:0 4px 14px rgba(249,115,22,0.4)}
     .primary-btn.small{padding:6px 12px;font-size:12px}
     .primary-btn:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(249,115,22,0.35)}
@@ -60,6 +60,11 @@
     .badge-good{background:rgba(22,163,74,0.15);color:#4ade80}
     .badge-mid{background:rgba(234,179,8,0.15);color:#fde68a}
     .badge-bad{background:rgba(220,38,38,0.2);color:#fecaca}
+    .user-card{margin-top:10px;padding:10px;border-radius:12px;border:1px solid #1f2937;background:#020617;box-shadow:0 8px 20px rgba(15,23,42,0.6)}
+    .user-card h3{margin:0 0 4px;font-size:13px;color:#f97316}
+    .user-card .sub{font-size:11px;color:#9ca3af;margin-bottom:4px}
+    .saved-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+    .delete-btn{border-radius:999px;border:0;background:#7f1d1d;color:#fee2e2;font-size:10px;padding:3px 7px;cursor:pointer}
   </style>
 </head>
 <body>
@@ -112,7 +117,7 @@
         <button type="button" id="toggleRules" class="ghost-btn">Hide / Show</button>
       </div>
       <div id="rulesBlock">
-        <h3>Cross / Upselling Bonus</h3>
+        <h3>Cross / Upselling & Extra Bonus</h3>
         <div class="grid-2">
           <label># PREMIER + ADSL / HW bundles
             <input type="number" id="r_bundlePremierAdsl" min="0" />
@@ -168,7 +173,7 @@
       </div>
       <p class="hint">
         Saving will store the day for the selected user. You can tap any saved day below
-        to reload and edit it.
+        to reload and edit it. You can also delete a record.
       </p>
     </section>
 
@@ -189,7 +194,7 @@
 
     <section class="card">
       <h2>Per-user progress</h2>
-      <div id="userTableWrapper"></div>
+      <div id="userCardsWrapper"></div>
     </section>
   </main>
 
@@ -214,7 +219,6 @@
       <h2>Users &amp; target share</h2>
       <p class="hint">
         Add agents / store managers and the % of branch target assigned to each one.
-        Sum of shares does not have to be exactly 100%, but it's recommended.
       </p>
       <div id="usersList"></div>
       <div class="add-user-row">
@@ -287,35 +291,34 @@
         factorExtraAdsl: 2,
         ptsBundlePremierAdsl: 5
       },
-      entries: [] // {id,date,userId, kpis..., manualPoints, rules...}
+      entries: [] // {id,date,userId,...}
     };
 
-    function deepClone(obj){
-      return JSON.parse(JSON.stringify(obj));
+    function cloneDefault() {
+      return JSON.parse(JSON.stringify(defaultState));
     }
 
     function loadState() {
       try {
-        const raw = localStorage.getItem('retail_kpi_state');
-        if (!raw) return deepClone(defaultState);
+        const raw = localStorage.getItem('retail_kpi_state_v2');
+        if (!raw) return cloneDefault();
         const parsed = JSON.parse(raw);
-        return Object.assign(deepClone(defaultState), parsed);
+        return Object.assign(cloneDefault(), parsed);
       } catch (e) {
         console.error('loadState error', e);
-        return deepClone(defaultState);
+        return cloneDefault();
       }
     }
 
     function saveState() {
-      localStorage.setItem('retail_kpi_state', JSON.stringify(state));
+      localStorage.setItem('retail_kpi_state_v2', JSON.stringify(state));
     }
 
     let state = loadState();
 
-    // ----- DOM HELPER -----
     const $ = (id) => document.getElementById(id);
 
-    // ----- TABS -----
+    // ===== TABS =====
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach((b) =>
@@ -325,16 +328,12 @@
         document.querySelectorAll('.view').forEach((v) =>
           v.classList.toggle('active', v.id === view)
         );
-        if (view === 'dashboardView') {
-          renderDashboard();
-        }
-        if (view === 'settingsView') {
-          renderSettings();
-        }
+        if (view === 'dashboardView') renderDashboard();
+        if (view === 'settingsView') renderSettings();
       });
     });
 
-    // ----- INIT CONTROLS -----
+    // ===== INIT SELECT & DATE =====
     function populateUserSelect() {
       const sel = $('entryUser');
       const current = sel.value;
@@ -354,7 +353,7 @@
       $('entryDate').value = today;
     }
 
-    // ----- RULES POINTS CALC -----
+    // ===== RULES POINTS =====
     function calcBonusPoints(entry) {
       const R = state.rules;
       let pts = 0;
@@ -364,21 +363,19 @@
       pts += (entry.r_extraMnp || 0) * (R.ptsExtraMnp || 0);
       pts += (entry.r_extraPremier || 0) * (R.ptsExtraPremier || 0);
       pts += (entry.r_bundlePremierAdsl || 0) * (R.ptsBundlePremierAdsl || 0);
-      const adslBase = R.ptsAdslBase || 0;
-      pts += (entry.r_extraAdsl || 0) * adslBase * (R.factorExtraAdsl || 0);
-      pts += (entry.r_newCorpLines || 0) * 1; // treat as 1 point per line (tunable)
+      pts += (entry.r_extraAdsl || 0) * (R.ptsAdslBase || 0) * (R.factorExtraAdsl || 0);
+      pts += (entry.r_newCorpLines || 0) * 1; // simple 1pt/line
       return pts;
     }
 
-    // ----- FORM BINDING -----
+    // ===== FORM READ / FILL =====
     function readEntryFromForm() {
       const userId = $('entryUser').value;
       const date = $('entryDate').value;
       if (!date || !userId) return null;
-
       const getNum = (id) => Number($(id).value || 0);
 
-      const entry = {
+      const e = {
         id: date + '_' + userId,
         date,
         userId,
@@ -399,47 +396,44 @@
         r_sim3to4: getNum('r_sim3to4'),
         r_simToEsim: getNum('r_simToEsim')
       };
-
-      entry.bonusPoints = calcBonusPoints(entry);
-      entry.totalPoints = entry.manualPoints + entry.bonusPoints;
-      return entry;
+      e.bonusPoints = calcBonusPoints(e);
+      e.totalPoints = e.manualPoints + e.bonusPoints;
+      return e;
     }
 
-    function fillFormFromEntry(entry) {
-      $('entryDate').value = entry.date;
-      $('entryUser').value = entry.userId;
-      $('gas').value = entry.gas || '';
-      $('ocExisting').value = entry.ocExisting || '';
-      $('ocNew').value = entry.ocNew || '';
-      $('postpaid').value = entry.postpaid || '';
-      $('adsl').value = entry.adsl || '';
-      $('wireless').value = entry.wireless || '';
-      $('devices').value = entry.devices || '';
-      $('manualPoints').value = entry.manualPoints || '';
+    function fillFormFromEntry(e) {
+      $('entryDate').value = e.date;
+      $('entryUser').value = e.userId;
+      $('gas').value = e.gas || '';
+      $('ocExisting').value = e.ocExisting || '';
+      $('ocNew').value = e.ocNew || '';
+      $('postpaid').value = e.postpaid || '';
+      $('adsl').value = e.adsl || '';
+      $('wireless').value = e.wireless || '';
+      $('devices').value = e.devices || '';
+      $('manualPoints').value = e.manualPoints || '';
 
-      $('r_bundlePremierAdsl').value = entry.r_bundlePremierAdsl || '';
-      $('r_extraAdsl').value = entry.r_extraAdsl || '';
-      $('r_extraMnp').value = entry.r_extraMnp || '';
-      $('r_extraPremier').value = entry.r_extraPremier || '';
-      $('r_newCorpAcc').value = entry.r_newCorpAcc || '';
-      $('r_newCorpLines').value = entry.r_newCorpLines || '';
-      $('r_sim3to4').value = entry.r_sim3to4 || '';
-      $('r_simToEsim').value = entry.r_simToEsim || '';
+      $('r_bundlePremierAdsl').value = e.r_bundlePremierAdsl || '';
+      $('r_extraAdsl').value = e.r_extraAdsl || '';
+      $('r_extraMnp').value = e.r_extraMnp || '';
+      $('r_extraPremier').value = e.r_extraPremier || '';
+      $('r_newCorpAcc').value = e.r_newCorpAcc || '';
+      $('r_newCorpLines').value = e.r_newCorpLines || '';
+      $('r_sim3to4').value = e.r_sim3to4 || '';
+      $('r_simToEsim').value = e.r_simToEsim || '';
 
-      $('bonusPointsToday').textContent = entry.bonusPoints.toFixed(1);
-      $('totalPointsToday').textContent = entry.totalPoints.toFixed(1);
+      $('bonusPointsToday').textContent = (e.bonusPoints || 0).toFixed(1);
+      $('totalPointsToday').textContent = (e.totalPoints || 0).toFixed(1);
     }
 
     function clearForm() {
-      document.querySelectorAll('#entryView input[type=number]').forEach((inp) => {
-        inp.value = '';
-      });
+      document.querySelectorAll('#entryView input[type=number]').forEach(inp => inp.value = '');
       $('bonusPointsToday').textContent = '0';
       $('totalPointsToday').textContent = '0';
     }
 
-    // Live update of bonus points
-    document.querySelectorAll('#entryView input').forEach((inp) => {
+    // live preview
+    document.querySelectorAll('#entryView input').forEach(inp => {
       inp.addEventListener('input', () => {
         const e = readEntryFromForm();
         if (!e) return;
@@ -448,36 +442,30 @@
       });
     });
 
-    // Save button
-    $('saveDayBtn').addEventListener('click', () => {
-      const entry = readEntryFromForm();
-      if (!entry) {
-        alert('Please select date and user at least.');
-        return;
-      }
-      const existingIdx = state.entries.findIndex((e) => e.id === entry.id);
-      if (existingIdx >= 0) state.entries[existingIdx] = entry;
-      else state.entries.push(entry);
+    $('clearFormBtn').addEventListener('click', clearForm);
 
-      saveState();
-      renderSavedDays();
-      renderDashboard();
-      clearForm();
-      alert('Day saved. You can tap it from the list to edit again.');
-    });
-
-    // Clear form
-    $('clearFormBtn').addEventListener('click', () => {
-      clearForm();
-    });
-
-    // Toggle rules block
     $('toggleRules').addEventListener('click', () => {
       const block = $('rulesBlock');
       block.style.display = block.style.display === 'none' ? 'block' : 'none';
     });
 
-    // ----- SAVED DAYS LIST -----
+    // ===== SAVE DAY & DELETE DAY =====
+    $('saveDayBtn').addEventListener('click', () => {
+      const e = readEntryFromForm();
+      if (!e) {
+        alert('Please select date and user.');
+        return;
+      }
+      const idx = state.entries.findIndex(x => x.id === e.id);
+      if (idx >= 0) state.entries[idx] = e;
+      else state.entries.push(e);
+      saveState();
+      renderSavedDays();
+      renderDashboard();
+      clearForm();
+      alert('Day saved. Tap it from the list to edit, or delete it.');
+    });
+
     function renderSavedDays() {
       const container = $('savedDaysList');
       if (!state.entries.length) {
@@ -486,36 +474,56 @@
         return;
       }
       container.className = 'saved-list';
+      container.innerHTML = '';
 
-      const sorted = [...state.entries].sort((a, b) =>
+      const sorted = [...state.entries].sort((a,b) =>
         a.date === b.date ? a.userId.localeCompare(b.userId) : a.date.localeCompare(b.date)
       );
 
-      container.innerHTML = '';
-      sorted.forEach((e) => {
-        const user = state.users.find((u) => u.id === e.userId);
+      sorted.forEach(e => {
+        const user = state.users.find(u => u.id === e.userId);
         const div = document.createElement('div');
         div.className = 'saved-item';
-        div.innerHTML = `
-          <div>
-            <div class="saved-main">${e.date} • ${user ? user.name : e.userId}</div>
-            <div class="saved-meta">
-              GAs: ${e.gas || 0} • OC Ex: ${e.ocExisting || 0} • Postpaid: ${e.postpaid || 0}<br/>
-              ADSL: ${e.adsl || 0} • Wireless: ${e.wireless || 0} • Devices: ${e.devices || 0}<br/>
-              Points: ${(e.totalPoints && e.totalPoints.toFixed) ? e.totalPoints.toFixed(1) : (e.totalPoints || 0)}
-            </div>
-          </div>
-          <div>
-            <span class="tag tag-ok">tap to edit</span>
+
+        const info = document.createElement('div');
+        info.innerHTML = `
+          <div class="saved-main">${e.date} • ${user ? user.name : e.userId}</div>
+          <div class="saved-meta">
+            GAs: ${e.gas || 0} • OC Ex: ${e.ocExisting || 0} • Postpaid: ${e.postpaid || 0}<br/>
+            ADSL: ${e.adsl || 0} • Wireless: ${e.wireless || 0} • Devices: ${e.devices || 0}<br/>
+            Points: ${(e.totalPoints || 0).toFixed(1)}
           </div>
         `;
-        div.addEventListener('click', () => fillFormFromEntry(e));
+        info.addEventListener('click', () => fillFormFromEntry(e));
+
+        const actions = document.createElement('div');
+        actions.className = 'saved-actions';
+        const tag = document.createElement('span');
+        tag.className = 'tag tag-ok';
+        tag.textContent = 'tap to edit';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          if (!confirm('Delete this day?')) return;
+          state.entries = state.entries.filter(x => x.id !== e.id);
+          saveState();
+          renderSavedDays();
+          renderDashboard();
+        });
+        actions.appendChild(tag);
+        actions.appendChild(delBtn);
+
+        div.appendChild(info);
+        div.appendChild(actions);
         container.appendChild(div);
       });
     }
 
-    // ----- SETTINGS RENDER / SAVE -----
+    // ===== SETTINGS =====
     function renderSettings() {
+      // targets
       $('t_gas').value = state.targets.gas || '';
       $('t_ocExisting').value = state.targets.ocExisting || '';
       $('t_ocNew').value = state.targets.ocNew || '';
@@ -525,21 +533,22 @@
       $('t_devices').value = state.targets.devices || '';
       $('t_points').value = state.targets.points || '';
 
+      // users
       const list = $('usersList');
       list.innerHTML = '';
-      state.users.forEach((u) => {
+      state.users.forEach(u => {
         const row = document.createElement('div');
         row.className = 'user-row';
         row.innerHTML = `
           <div>
             <span>${u.name}</span>
-            <span style="color:#9ca3af;font-size:11px">${u.share}% of branch target</span>
+            <span style="color:#9ca3af;font-size:11px">${u.share || 0}% of branch target</span>
           </div>
           <button data-id="${u.id}">Delete</button>
         `;
         row.querySelector('button').addEventListener('click', () => {
           if (!confirm('Delete this user?')) return;
-          state.users = state.users.filter((x) => x.id !== u.id);
+          state.users = state.users.filter(x => x.id !== u.id);
           saveState();
           renderSettings();
           populateUserSelect();
@@ -548,6 +557,7 @@
         list.appendChild(row);
       });
 
+      // rules
       $('s_ptsCorpAcc').value = state.rules.ptsCorpAcc;
       $('s_ptsSim3to4').value = state.rules.ptsSim3to4;
       $('s_ptsSimToEsim').value = state.rules.ptsSimToEsim;
@@ -565,7 +575,7 @@
         alert('Please enter user name');
         return;
       }
-      const id = 'u' + Math.random().toString(36).slice(2, 8);
+      const id = 'u' + Math.random().toString(36).slice(2,8);
       state.users.push({ id, name, share });
       $('newUserName').value = '';
       $('newUserShare').value = '';
@@ -601,13 +611,13 @@
       renderDashboard();
     });
 
-    // ----- DASHBOARD -----
+    // ===== DASHBOARD =====
     function sumEntries(filterFn) {
       const res = {
         gas: 0, ocExisting: 0, ocNew: 0, postpaid: 0,
         adsl: 0, wireless: 0, devices: 0, points: 0
       };
-      state.entries.filter(filterFn).forEach((e) => {
+      state.entries.filter(filterFn).forEach(e => {
         res.gas += e.gas || 0;
         res.ocExisting += e.ocExisting || 0;
         res.ocNew += e.ocNew || 0;
@@ -635,8 +645,8 @@
     function renderDashboard() {
       const branch = sumEntries(() => true);
       const t = state.targets;
-
       const branchDiv = $('branchOverview');
+
       const rows = [
         ['GAs', branch.gas, t.gas],
         ['OC Existing', branch.ocExisting, t.ocExisting],
@@ -657,20 +667,21 @@
           '<td>' + (target || '-') + '</td>' +
           '<td>' + (target ? p.toFixed(0) + '%' : '-') + '</td>' +
           '<td>' + (target ? statusBadge(p) : '') + '</td>' +
-          '</tr>';
+        '</tr>';
       });
       html += '</tbody></table>';
       branchDiv.innerHTML = html;
 
-      const userWrap = $('userTableWrapper');
+      // per-user cards
+      const wrap = $('userCardsWrapper');
+      wrap.innerHTML = '';
       if (!state.users.length) {
-        userWrap.innerHTML = '<p class="hint">No users yet.</p>';
+        wrap.innerHTML = '<p class="hint">No users yet. Add them from Settings.</p>';
         return;
       }
-      let uhtml = '<table class="table"><thead><tr><th>User</th><th>KPI</th><th>Ach</th><th>Target</th><th>%</th></tr></thead><tbody>';
-      state.users.forEach((u) => {
+      state.users.forEach(u => {
         const share = (u.share || 0) / 100;
-        const totals = sumEntries((e) => e.userId === u.id);
+        const totals = sumEntries(e => e.userId === u.id);
         const userTargets = {
           gas: t.gas * share,
           ocExisting: t.ocExisting * share,
@@ -691,22 +702,27 @@
           ['Dev', totals.devices, userTargets.devices],
           ['Pts', totals.points, userTargets.points]
         ];
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.innerHTML = '<h3>' + u.name + '</h3>' +
+          '<div class="sub">Share: ' + (u.share || 0) + '% of branch target</div>';
+        let table = '<table class="table"><thead><tr><th>KPI</th><th>Ach</th><th>Target</th><th>%</th></tr></thead><tbody>';
         list.forEach(([name, ach, target]) => {
           const p = pct(ach, target);
-          uhtml += '<tr>' +
-            '<td>' + u.name + '</td>' +
+          table += '<tr>' +
             '<td>' + name + '</td>' +
             '<td>' + ach.toFixed(1) + '</td>' +
             '<td>' + (target ? target.toFixed(1) : '-') + '</td>' +
             '<td>' + (target ? p.toFixed(0) + '%' : '-') + '</td>' +
-            '</tr>';
+          '</tr>';
         });
+        table += '</tbody></table>';
+        card.innerHTML += table;
+        wrap.appendChild(card);
       });
-      uhtml += '</tbody></table>';
-      userWrap.innerHTML = uhtml;
     }
 
-    // ----- INIT -----
+    // ===== INIT =====
     populateUserSelect();
     setToday();
     renderSavedDays();
